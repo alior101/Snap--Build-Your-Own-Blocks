@@ -357,6 +357,11 @@ SyntaxElementMorph.prototype.init = function () {
 
     this.defaults = [];
     this.cachedInputs = null;
+
+    // rtl related properties
+    this.rtlSensitive = false;
+    this.inputsReversed = false;
+
 };
 
 // SyntaxElementMorph stepping:

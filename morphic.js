@@ -1104,6 +1104,11 @@ function localize(string) {
     return string;
 }
 
+function localIsRTL()
+{
+  return;
+}
+
 function isNil(thing) {
     return thing === undefined || thing === null;
 }
@@ -2530,10 +2535,20 @@ Morph.prototype.setWidth = function (width) {
 Morph.prototype.silentSetWidth = function (width) {
     // do not drawNew() just yet
     var w = Math.max(Math.round(width || 0), 0);
-    this.bounds.corner = new Point(
+    if (localIsRTL())
+    {
+	this.bounds.corner = new Point(
+        w - this.bounds.origin.x ,
+        this.bounds.corner.y );
+      
+    }
+    else
+    {
+	this.bounds.corner = new Point(
         this.bounds.origin.x + w,
         this.bounds.corner.y
-    );
+      );
+    }
 };
 
 Morph.prototype.setHeight = function (height) {
@@ -6662,6 +6677,8 @@ MenuMorph.prototype.init = function (target, title, environment, fontSize) {
     // immutable properties:
     this.border = null;
     this.edge = null;
+    // rtl adjustement
+    this.rtl =  ((SnapTranslator.language == "he")?true:false);
 };
 
 MenuMorph.prototype.addItem = function (
@@ -6745,7 +6762,14 @@ MenuMorph.prototype.drawNew = function () {
     this.silentSetExtent(new Point(0, 0));
 
     y = 2;
-    x = this.left() + 4;
+    if (localIsRTL())
+    {
+        x = this.left();
+    }
+    else
+    {
+        x = this.left()+4;
+    }
     if (!this.isListContents) {
         if (this.title) {
             this.createLabel();
@@ -6836,6 +6860,12 @@ MenuMorph.prototype.adjustWidths = function () {
             if (isSelected) {
                 item.image = item.pressImage;
             }
+            if (localIsRTL())
+            {
+              item.label.bounds.origin.x = w -  item.label.bounds.corner.x + 4;
+              item.label.bounds.corner.x = w;
+            }
+             
         } else {
             item.drawNew();
             if (item === myself.label) {
@@ -6925,6 +6955,7 @@ function StringMorph(
     color,
     fontName
 ) {
+
     this.init(
         text,
         fontSize,
@@ -7566,7 +7597,13 @@ TextMorph.prototype.parse = function () {
             oldline = '';
         } else {
             if (myself.maxWidth > 0) {
-                newline = oldline + word + ' ';
+		// rtl changes words order 
+		if (localIsRTL()) {
+		  newline = oldline + word + ' ';
+		}
+		else {
+		  newline =  word + ' ' + oldline;
+		}
                 w = context.measureText(newline).width;
                 if (w > myself.maxWidth) {
                     myself.lines.push(oldline);
@@ -7575,12 +7612,24 @@ TextMorph.prototype.parse = function () {
                         myself.maxLineWidth,
                         context.measureText(oldline).width
                     );
-                    oldline = word + ' ';
+		    if (localIsRTL()) {
+		      oldline = word + ' ';
+		    }
+		    else {
+		      oldline =  ' ' + word;
+		    }
                 } else {
                     oldline = newline;
                 }
             } else {
-                oldline = oldline + word + ' ';
+	      if (localIsRTL())
+	      {
+		oldline =  word + ' ' + oldline; 
+	      }
+	      else
+	      {
+		oldline = oldline + word + ' ';
+	      }
             }
             slot += word.length + 1;
         }
@@ -8055,21 +8104,24 @@ TriggerMorph.prototype.drawNew = function () {
 TriggerMorph.prototype.createBackgrounds = function () {
     var context,
         ext = this.extent();
-
+    var leftAdjust = 0;
+    if (localIsRTL()){
+        leftAdjust = 4;
+    }
     this.normalImage = newCanvas(ext);
     context = this.normalImage.getContext('2d');
     context.fillStyle = this.color.toString();
-    context.fillRect(0, 0, ext.x, ext.y);
+    context.fillRect(leftAdjust, 0, ext.x, ext.y);
 
     this.highlightImage = newCanvas(ext);
     context = this.highlightImage.getContext('2d');
     context.fillStyle = this.highlightColor.toString();
-    context.fillRect(0, 0, ext.x, ext.y);
+    context.fillRect(leftAdjust, 0, ext.x, ext.y);
 
     this.pressImage = newCanvas(ext);
     context = this.pressImage.getContext('2d');
     context.fillStyle = this.pressColor.toString();
-    context.fillRect(0, 0, ext.x, ext.y);
+    context.fillRect(leftAdjust, 0,  ext.x, ext.y);
 
     this.image = this.normalImage;
 };

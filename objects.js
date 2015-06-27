@@ -946,7 +946,8 @@ SpriteMorph.prototype.initBlocks = function () {
         reportModulus: {
             type: 'reporter',
             category: 'operators',
-            spec: '%n mod %n'
+            spec: '%n mod %n',
+	    rtlSensitive:true
         },
         reportRandom: {
             type: 'reporter',
@@ -1592,6 +1593,43 @@ SpriteMorph.prototype.colorFiltered = function (aColor) {
     return morph;
 };
 
+// RTL related helper function to check if param order is inverted in str1 and str2
+checkParamOrderInverted = function(str1, str2)
+{
+
+  var str1_p = [];
+  str1.split(' ').forEach(function (word) {
+        if (word[0] === '%') {
+            str1_p.push(word);
+        }
+      });
+
+  var str2_p = [];
+  str2.split(' ').forEach(function (word) {
+        if (word[0] === '%') {
+            str2_p.push(word);
+        }
+      });
+  if (array_equals(str1_p, str2_p))
+    return false;
+  
+  return true;
+}
+
+
+array_equals = function (array1, array2) {
+ 
+    if (array1.length != array2.length)
+        return false;
+
+    for (var i = 0, l=array1.length; i < l; i++) {
+        if (array1[i] != array2[i]) { 
+            return false;   
+        }           
+    }       
+    return true;
+}   
+
 // SpriteMorph block instantiation
 
 SpriteMorph.prototype.blockForSelector = function (selector, setDefaults) {
@@ -1609,15 +1647,36 @@ SpriteMorph.prototype.blockForSelector = function (selector, setDefaults) {
     if (contains(['reifyReporter', 'reifyPredicate'], block.selector)) {
         block.isStatic = true;
     }
+    // check if rtl sensitive
     block.setSpec(localize(info.spec));
+    
+    // An RTL block is a block which is "displayed" 
+    // on the screen with reversed order of parameters and RTL language words
+    // the conditions for a RTL block are either
+    // 1. reversed order of parameters as detected by reverse order of %x specifications (this is to catch blocks like "move 
+    // 2. similar %x spec block descrition but with RTL specifically SET in the block definition (this is to catch blocks like "modulo" but to skip blocks like "+")
+    if (block.blockSpec.length)
+    {
+      if (checkParamOrderInverted(info.spec, block.blockSpec))
+      {
+            block.rtlSensitive = true;
+      }
+    }
+    if ((info.rtlSensitive) && (SnapTranslator.language == "he"))
+    {
+	    block.rtlSensitive = true;
+    }
     if ((setDefaults && info.defaults) || (migration && migration.inputs)) {
         defaults = migration ? migration.inputs : info.defaults;
         block.defaults = defaults;
-        inputs = block.inputs();
+        // change inputs order if rtl sensitive
+        inputs = block.rtlSensitive?block.inputs().reverse():block.inputs();
+	//inputs = block.inputs();
         if (inputs[0] instanceof MultiArgMorph) {
             inputs[0].setContents(defaults);
             inputs[0].defaults = defaults;
         } else {
+	    console.log(info.spec)
             for (i = 0; i < defaults.length; i += 1) {
                 if (defaults[i] !== null) {
                     inputs[i].setContents(defaults[i]);

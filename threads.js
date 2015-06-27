@@ -499,8 +499,14 @@ Process.prototype.evaluateBlock = function (block, argCount) {
     } else {
         if (this[block.selector]) {
             rcvr = this;
-        }
-        if (this.isCatchingErrors) {
+    }
+    // we reverse inputs order if this block is sensitive to RTL and we are in RTL mode
+    if (block.rtlSensitive && (rtl == true) && (block.inputsReversed == false)) {
+	inputs = inputs.reverse(inputs);
+	block.inputsReversed = true;
+    }
+
+    if (this.isCatchingErrors) {
             try {
                 this.returnValueToParentContext(
                     rcvr[block.selector].apply(rcvr, inputs)

@@ -3612,6 +3612,13 @@ IDE_Morph.prototype.reflectLanguage = function (lang, callback) {
         this.openProjectString(projectData);
     }
     this.saveSetting('language', lang);
+    // RTL decision
+    setRTLLocal(false);
+    if (lang === 'he')
+    {
+        setRTLLocal(true);
+    }
+
     if (callback) {callback.call(this); }
 };
 

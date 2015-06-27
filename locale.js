@@ -49,18 +49,54 @@ modules.locale = '2015-June-25';
 var Localizer;
 var SnapTranslator = new Localizer();
 
+// global variable to signal rtl mode
+var rtl;
+
 function localize(string) {
     return SnapTranslator.translate(string);
 }
 
+function isInDictionary(string) {
+      return Object.prototype.hasOwnProperty.call(
+        SnapTranslator.dict[SnapTranslator.language],
+        string
+    ) ? true : false;
+
+}
+
+function localIsRTL() {
+      return rtl;
+}
+function setRTLLocal(isRTL) {
+      rtl = isRTL;
+}
 // Localizer /////////////////////////////////////////////////////////////
 
 function Localizer(language, dict) {
     this.language = language || 'en';
     this.dict = dict || {};
+    
+    rtl = (this.language == 'he')?true:false;
 }
 
+
+
+function StringUtil() {
+ 
+    this.reverseWords = function(str) {
+        var result = "";
+        var wordArray = str.split(" ");
+        for(var i = wordArray.length - 1; i >= 0; i--) {
+            result += wordArray[i] + " ";
+        }
+        return result.trim();
+    }
+ 
+}
+
+
 Localizer.prototype.translate = function (string) {
+  
     return Object.prototype.hasOwnProperty.call(
         this.dict[this.language],
         string
@@ -138,6 +174,18 @@ SnapTranslator.dict.en = {
     'block deletion dialog text':
         'Are you sure you want to delete this\n'
             + 'custom block and all its instances?'
+};
+
+SnapTranslator.dict.he = {
+    // meta information
+    'language_name':
+        'Hebrew',
+    'language_translator':
+        'Lior Assouline',
+    'translator_e-mail':
+        'alior101@gmail.com',
+    'last_changed':
+        '2015-05-01'
 };
 
 SnapTranslator.dict.de = {
